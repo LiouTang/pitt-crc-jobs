@@ -1,0 +1,54 @@
+#!/bin/bash
+#SBATCH --job-name="@Job Name@"
+#SBATCH --output="@Log Directory@/@Job Name@_%j.out"
+#SBATCH --error="@Log Directory@/@Job Name@_%j.err"
+#SBATCH --chdir="@Working Directory@"
+#SBATCH --nodes=@Nodes@
+#SBATCH --ntasks-per-node=@Tasks Per Node@
+#SBATCH --cpus-per-task=@CPUs Per Task@
+#SBATCH --mem=@Memory@
+# Remove the GPU directive and GPU diagnostics below for CPU-only jobs.
+#SBATCH --gres=gpu:@GPUs@
+#SBATCH --cluster=@Cluster@
+#SBATCH --partition=@Partition@
+#SBATCH --qos=@QoS@
+#SBATCH --time=@Time@
+#SBATCH --mail-user=@User Email@
+#SBATCH --mail-type=BEGIN,END,FAIL
+
+set -e -o pipefail
+
+if [[ -z "${SLURM_JOB_ID:-}" ]]; then
+    echo "Submit this script through Slurm; a compute allocation is required." >&2
+    exit 1
+fi
+
+# Preserve the workload's status even if statistics collection fails.
+record_stats() {
+    job_status=$?
+    trap - EXIT
+    crc-job-stats || true
+    exit "$job_status"
+}
+trap record_stats EXIT
+
+# Clean environment
+module purge
+
+# Activate custom conda environment (full path)
+source "@Conda Init@"
+conda activate "@Conda Env@"
+
+# Move to working directory
+cd "@Working Directory@" || { echo "Failed to cd into folder"; exit 1; }
+
+# Sanity check
+echo "Host: $(hostname)"
+echo "Working dir: $(pwd)"
+echo "Python: $(which python)"
+# GPU diagnostics; remove for CPU-only jobs.
+echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-unset}"
+nvidia-smi
+
+# Replace this launch section as needed for multi-command or distributed work.
+srun @Commands@
