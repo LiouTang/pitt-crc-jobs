@@ -56,7 +56,7 @@ These practices ensure a reliable workflow. Review and follow them each time car
 
 1. Run **all experiment computation on compute nodes inside Slurm allocations**, including Python, environment checks, checkpoint loading, diagnostics, validation, training, inference, and data processing. This workflow deliberately keeps these checks inside allocations. Lightweight management commands such as Git synchronization, file management, `sbatch`, `squeue`, `sacct`, and `scontrol` may run on login nodes; do not launch experiment scripts there.
 
-2. Always request **resources and runtime** that match the actual needs of the job. Over-requesting can lead to inefficient cluster usage and longer queue times, while under-requesting may cause job failures. Be mindful of GPU allocation and usage. Ensure that the job script correctly specifies the number of GPUs required and that the code utilizes them efficiently.
+2. Always request **resources and run time** that match the actual needs of the job. Over-requesting can lead to inefficient cluster usage and longer queue times, while under-requesting may cause job failures. Be mindful of GPU allocation and usage. Ensure that the job script correctly specifies the number of GPUs required and that the code utilizes them efficiently.
 
 3. Choose CPU/GPU, memory, and partition for the actual workload and current manual, then the shortest suitable QoS tier that comfortably fits the requested time. GPU jobs must request GPU resources explicitly.
 
@@ -80,7 +80,9 @@ This section guides writing Slurm job scripts for specific experiments. They onl
 
 3. **Check before submission.** Check for unresolved template tokens, follow the method-specific Source Control guidance above, verify required input/log paths, and run `bash -n job.sbatch` locally. Transfer the rendered script through the agreed mechanism, then use `sbatch --test-only <remote-script-path>` on CRC when supported to validate scheduler requests without submitting a job; this does not test the application. Confirm that the requested time respects the user's hard cap and fits the selected QoS.
 
-4. **Submit and record.** Submit the validated remote script with `sbatch --parsable <remote-script-path>`. Record the returned job ID and cluster (separated by `;` when a cluster is returned), submission time, and rendered script in the run record. If submission times out or the response is ambiguous, check for an existing submission before retrying. For monitoring, refer to the "Monitoring" section of this skill document.
+4. **Obtain user confirmation.** After finishing checking and validating the job script, obtain **explicit confirmation** from the user to submit with a short overview of the jobs, estimated run times, and requested run time and resources before proceeding with the actual submission.
+
+5. **Submit and record.** Submit the validated remote script with `sbatch --parsable <remote-script-path>`. Record the returned job ID and cluster (separated by `;` when a cluster is returned), submission time, and rendered script in the run record. If submission times out or the response is ambiguous, check for an existing submission before retrying. For monitoring, refer to the "Monitoring" section of this skill document.
 
 ### Guidelines
 
